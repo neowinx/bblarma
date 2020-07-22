@@ -12,6 +12,9 @@
 
 fauxmoESP fauxmo;
 
+static bool alarm = false;
+static boolean blinki = false;
+
 // -----------------------------------------------------------------------------
 
 #define SERIAL_BAUDRATE     115200
@@ -93,7 +96,11 @@ void setup() {
         // Otherwise comparing the device_name is safer.
 
         if (strcmp(device_name, ID_BBLARMA)==0) {
-            digitalWrite(LED_BBLARMA, state ? HIGH : LOW);
+            alarm = state;
+            if (!alarm) {
+                digitalWrite(LED_BBLARMA, LOW);
+                blinki = false;
+            }
         }
 
     });
@@ -112,6 +119,15 @@ void loop() {
     if (millis() - last > 5000) {
         last = millis();
         Serial.printf("[MAIN] Free heap: %d bytes\n", ESP.getFreeHeap());
+    }
+
+    if (alarm) {
+    	static unsigned long lasto = millis();
+        if (millis() - lasto > 1000) {
+            lasto = millis();
+            digitalWrite(LED_BBLARMA, blinki ? HIGH : LOW);
+            blinki = !blinki;
+        }
     }
 
     // If your device state is changed by any other means (MQTT, physical button,...)
